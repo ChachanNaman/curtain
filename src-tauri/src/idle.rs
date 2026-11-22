@@ -1,7 +1,7 @@
 //! Idle auto-cover (PRD F10): cover all screens after N minutes with no
-//! input. macOS implementation via `CGEventSourceSecondsSinceLastEventType`,
-//! polled from the same 3s ticker the agent/keep-awake loop already
-//! runs on.
+//! input. macOS via `CGEventSourceSecondsSinceLastEventType`, Windows
+//! via `GetLastInputInfo`; both polled from the same 3s ticker the
+//! agent/keep-awake loop already runs on.
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use tauri::{AppHandle, Runtime};
@@ -24,9 +24,30 @@ fn idle_seconds() -> f64 {
     unsafe { CGEventSourceSecondsSinceLastEventType(K_CG_EVENT_SOURCE_STATE_HID_SYSTEM_STATE, K_CG_ANY_INPUT_EVENT_TYPE) }
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "windows")]
 fn idle_seconds() -> f64 {
-    // TODO(M5): Windows via GetLastInputInfo.
+    use windows::Win32::System::SystemInformation::GetTickCount64;
+    use windows::Win32::UI::Input::KeyboardAndMouse::{GetLastInputInfo, LASTINPUTINFO};
+
+    let mut info = LASTINPUTINFO {
+        cbSize: size_of::<LASTINPUTINFO>() as u32,
+        ..Default::default()
+    };
+    if unsafe { GetLastInputInfo(&mut info) }.as_bool() {
+        // Both GetTickCount64 and dwTime tick in ms since boot;
+        // dwTime is the 32-bit truncated form, so compare against the
+        // low 32 bits of the 64-bit tick count rather than the full
+        // value to avoid a false-huge idle reading after ~49.7 days
+        // of uptime (the same wraparound window dwTime itself has).
+        let now_low = (unsafe { GetTickCount64() } & 0xFFFF_FFFF) as u32;
+        (now_low.wrapping_sub(info.dwTime) as f64) / 1000.0
+    } else {
+        0.0
+    }
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+fn idle_seconds() -> f64 {
     0.0
 }
 

@@ -125,7 +125,6 @@ pub fn index_for_stable_id<R: Runtime>(app: AppHandle<R>, stable_id: String) -> 
 }
 
 /// Which display index holds `pid`'s frontmost window, if resolvable.
-/// `None` on Windows for now (see `window_display_windows`'s M5 TODO).
 pub fn display_index_for_pid<R: Runtime>(app: &AppHandle<R>, pid: u32) -> Option<u32> {
     #[cfg(target_os = "macos")]
     {
