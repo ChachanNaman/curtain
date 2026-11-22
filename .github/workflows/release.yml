@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Two separate per-arch macOS builds rather than
+          # --target universal-apple-darwin: Tauri's universal-build
+          # step only lipo-merges the main binary, not the secondary
+          # curtain-notify bin target, so bundling a universal build
+          # fails on "curtain-notify does not exist".
+          - platform: macos-latest
+            args: "--target aarch64-apple-darwin"
+          - platform: macos-latest
+            args: "--target x86_64-apple-darwin"
+          - platform: windows-latest
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Curtain ${{ github.ref_name }}"
+          releaseBody: |
+            See the assets below to download and install this version.
+
+            macOS: download the `.dmg` matching your Mac (`aarch64` for Apple Silicon, `x64`
+            for Intel), open it, drag Curtain to Applications. Gatekeeper will refuse to open
+            it the first time (it's ad-hoc signed, not notarized) — either
+            `brew install chachannaman/tap/curtain`, or right-click the app → Open, or run
+            `xattr -cr /Applications/Curtain.app`.
+
+            Windows: download the `.msi` or the NSIS `.exe`. SmartScreen will warn since
+            it's unsigned — click "More info" → "Run anyway". Or install via
+            `scoop bucket add curtain https://github.com/chachannaman/scoop-bucket && scoop install curtain`.
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}

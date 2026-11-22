@@ -1,0 +1,137 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/geist';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Theatre curtain: deep velvet black, a single warm stage-light accent,
+ * no mint/green as primary. Curtain is dark-only — these are also the
+ * values shadcn's components read (--background, --primary, etc.), so
+ * there's no separate light theme to maintain.
+ */
+:root {
+  --bg: #09090b;
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --surface-hover: rgba(255, 255, 255, 0.07);
+  --text: #f4f4f5;
+  --text-muted: #a1a1aa;
+  --text-faint: #52525b;
+  /* Desaturated warm ember, not pure saturated amber — reserve for
+     small, high-intent surfaces only (focus rings, the one primary
+     action, active/selected state, badges), never a large fill. */
+  --stage: #d97757;
+  --stage-glow: rgba(217, 119, 87, 0.28);
+  --ok: #4ade80;
+  --radius-tile: 18px;
+  --radius-card: 14px;
+  --radius-chip: 999px;
+
+  --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', system-ui, sans-serif;
+  --font-display: 'Geist Variable', var(--font-ui);
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  /* shadcn semantic tokens, remapped onto the theatre palette */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: #0c0c0f;
+  --popover-foreground: var(--text);
+  --primary: var(--stage);
+  --primary-foreground: #1a1203;
+  --secondary: var(--surface);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--surface-hover);
+  --accent-foreground: var(--text);
+  --destructive: #f04444;
+  --border: var(--surface-border);
+  --input: var(--surface-border);
+  --ring: var(--stage-glow);
+  --radius: 14px;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-border: var(--surface-border);
+  --color-surface-hover: var(--surface-hover);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-stage: var(--stage);
+  --color-stage-glow: var(--stage-glow);
+  --color-ok: var(--ok);
+  --radius-tile: var(--radius-tile);
+  --radius-card: var(--radius-card);
+  --radius-chip: var(--radius-chip);
+  --font-sans: var(--font-ui);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--font-ui);
+  /* Translucent, not fully transparent: shows native vibrancy blur in the
+     popover window, but still reads correctly in a plain browser/screenshot. */
+  background: rgba(9, 9, 11, 0.82);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+::selection {
+  background: var(--stage-glow);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
